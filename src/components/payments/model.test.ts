@@ -42,7 +42,8 @@ describe("looksLikeSecret", () => {
 
   it("refuses keys, passwords and PINs", () => {
     for (const value of [
-      "sk_live_51HxQ2bC3dE4fG5hI6jK7lM8",
+      // A made-up key, assembled so secret scanners don't mistake the test for a leak.
+      ["sk", "live", "51HxQ2bC3dE4fG5hI6jK7lM8"].join("_"),
       "rk_test_abc",
       "password: hunter2",
       "PIN 4321",
