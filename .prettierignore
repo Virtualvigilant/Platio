@@ -1,0 +1,6 @@
+.next
+node_modules
+package-lock.json
+src/styles/tokens.css
+supabase/migrations
+*.pdf

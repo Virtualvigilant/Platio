@@ -1,0 +1,33 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@layer base {
+  html {
+    background: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  body {
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  /* Keyboard focus everywhere: a gap in the page colour, then solid focus teal. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  a {
+    color: var(--color-brand-strong);
+    text-underline-offset: 2px;
+  }
+}

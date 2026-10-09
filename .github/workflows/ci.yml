@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    env:
+      DATABASE_URL: postgres://postgres@127.0.0.1:54329/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Design tokens are generated from design-system/tokens.json
+        run: npm run tokens:check
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      # The runner image ships PostgreSQL 16; starting it directly avoids pulling a Docker image
+      # (Docker Hub rate-limits anonymous pulls).
+      - name: Start Postgres
+        run: npm run db:test-server
+      - name: Database and tenant-isolation tests
+        run: npm run test:db
+      - run: npm run build
