@@ -1,0 +1,157 @@
+/* DineFlow — generated from design-system/tokens.json by scripts/build-tokens.mjs. Do not edit by hand. */
+
+@theme static {
+  /* Only DineFlow colours: the default Tailwind palette is switched off. */
+  --color-*: initial;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7f9fc;
+  --color-surface-raised: #ffffff;
+  --color-ink: #182433;
+  --color-ink-muted: #526174;
+  --color-line: #d9dfe7;
+  --color-line-strong: #7a8799;
+  --color-rule: #000000;
+  --color-navy: #152238;
+  --color-on-navy: #ffffff;
+  --color-brand: #167d8d;
+  --color-brand-strong: #136e7c;
+  --color-brand-soft: #e7f4f5;
+  --color-on-brand: #ffffff;
+  --color-amber: #b86418;
+  --color-amber-strong: #9a5410;
+  --color-amber-soft: #fff3e5;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-on-danger: #ffffff;
+  --color-neutral-soft: #edf1f5;
+  --color-tenant: var(--color-brand);
+  --color-on-tenant: var(--color-on-brand);
+  --color-focus: var(--color-brand);
+  --shadow-float: 0 8px 24px #1824332e;
+  --shadow-focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #167d8d;
+
+  --font-serif: var(--font-noto-serif), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-carlito), Lato, Calibri, "Segoe UI", system-ui, sans-serif;
+
+  --text-wordmark: 36px;
+  --text-wordmark--line-height: 40px;
+  --text-wordmark--font-weight: 700;
+  --text-wordmark--letter-spacing: 0.02em;
+  --text-display: 32px;
+  --text-display--line-height: 40px;
+  --text-display--font-weight: 700;
+  --text-lede: 18px;
+  --text-lede--line-height: 28px;
+  --text-lede--font-weight: 400;
+  --text-title: 26px;
+  --text-title--line-height: 32px;
+  --text-title--font-weight: 700;
+  --text-heading: 20px;
+  --text-heading--line-height: 26px;
+  --text-heading--font-weight: 700;
+  --text-label: 16px;
+  --text-label--line-height: 20px;
+  --text-label--font-weight: 700;
+  --text-ui: 16px;
+  --text-ui--line-height: 20px;
+  --text-ui--font-weight: 400;
+  --text-small: 14px;
+  --text-small--line-height: 18px;
+  --text-small--font-weight: 400;
+  --text-numeral: 28px;
+  --text-numeral--line-height: 32px;
+  --text-numeral--font-weight: 700;
+  --text-pickup-code: 40px;
+  --text-pickup-code--line-height: 48px;
+  --text-pickup-code--font-weight: 700;
+  --text-pickup-code--letter-spacing: 0.12em;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-body--font-weight: 400;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 21px;
+  --text-body-sm--font-weight: 400;
+  --text-callout-title: 16px;
+  --text-callout-title--line-height: 24px;
+  --text-callout-title--font-weight: 700;
+  --text-eyebrow: 12px;
+  --text-eyebrow--line-height: 16px;
+  --text-eyebrow--font-weight: 700;
+  --text-eyebrow--letter-spacing: 0.06em;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--font-weight: 400;
+  --text-caption--letter-spacing: 0.04em;
+
+  --radius-0: 0px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-pill: 999px;
+
+  --spacing: 4px;
+  --spacing-touch-min: 44px;
+  --spacing-touch-kitchen: 56px;
+  --container-content: 720px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-surface: #0f1a2b;
+    --color-surface-alt: #152238;
+    --color-surface-raised: #1a2940;
+    --color-ink: #eef2f7;
+    --color-ink-muted: #a9b6c6;
+    --color-line: #2a3b55;
+    --color-line-strong: #6f819a;
+    --color-rule: #6f819a;
+    --color-navy: #22365a;
+    --color-on-navy: #ffffff;
+    --color-brand: #4fb8c6;
+    --color-brand-strong: #7ccfd9;
+    --color-brand-soft: #11363d;
+    --color-on-brand: #0f1a2b;
+    --color-amber: #f0a55a;
+    --color-amber-strong: #f6c08a;
+    --color-amber-soft: #3a2812;
+    --color-danger: #f58a80;
+    --color-danger-soft: #3d1c1a;
+    --color-on-danger: #0f1a2b;
+    --color-neutral-soft: #24334a;
+    --color-tenant: var(--color-brand);
+    --color-on-tenant: var(--color-on-brand);
+    --color-focus: var(--color-brand);
+    --shadow-float: 0 8px 24px #000000a6;
+    --shadow-focus-ring: 0 0 0 2px #0f1a2b, 0 0 0 4px #4fb8c6;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-surface: #0f1a2b;
+  --color-surface-alt: #152238;
+  --color-surface-raised: #1a2940;
+  --color-ink: #eef2f7;
+  --color-ink-muted: #a9b6c6;
+  --color-line: #2a3b55;
+  --color-line-strong: #6f819a;
+  --color-rule: #6f819a;
+  --color-navy: #22365a;
+  --color-on-navy: #ffffff;
+  --color-brand: #4fb8c6;
+  --color-brand-strong: #7ccfd9;
+  --color-brand-soft: #11363d;
+  --color-on-brand: #0f1a2b;
+  --color-amber: #f0a55a;
+  --color-amber-strong: #f6c08a;
+  --color-amber-soft: #3a2812;
+  --color-danger: #f58a80;
+  --color-danger-soft: #3d1c1a;
+  --color-on-danger: #0f1a2b;
+  --color-neutral-soft: #24334a;
+  --color-tenant: var(--color-brand);
+  --color-on-tenant: var(--color-on-brand);
+  --color-focus: var(--color-brand);
+  --shadow-float: 0 8px 24px #000000a6;
+  --shadow-focus-ring: 0 0 0 2px #0f1a2b, 0 0 0 4px #4fb8c6;
+  color-scheme: dark;
+}
