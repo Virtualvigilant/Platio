@@ -1,8 +1,22 @@
 import "server-only";
+import type {
+  StorefrontCategory,
+  StorefrontData,
+  StorefrontMenuItem,
+} from "@/components/storefront/types";
 import { formatKES } from "@/domain/money";
 import { getBusinessState, type BusinessState } from "@/domain/restaurants/business-status";
+import type { StorefrontLayout } from "@/domain/restaurants/config";
+import {
+  formatClosure,
+  summarizeWeeklyHours,
+  upcomingClosures,
+} from "@/domain/restaurants/hours-display";
+import type { RestaurantStatus } from "@/domain/restaurants/lifecycle";
 import type { ServerClient } from "@/lib/supabase/server";
 import { publicAssetUrl } from "@/server/storage";
+
+export type { StorefrontCategory, StorefrontData, StorefrontMenuItem };
 
 interface HoursRow {
   weekday: number;
@@ -55,10 +69,15 @@ const PUBLIC_FIELDS = `
   restaurant_closures (start_at, end_at)
 `;
 
-function toSummary(row: RestaurantRow, now: Date, prices?: number[]): RestaurantSummary {
-  const state = getBusinessState({
-    lifecycle: row.status,
-    acceptingOrders: row.accepting_orders,
+function businessState(
+  row: RestaurantRow,
+  now: Date,
+  lifecycle: string = row.status,
+  acceptingOrders: boolean = row.accepting_orders,
+): BusinessState {
+  return getBusinessState({
+    lifecycle,
+    acceptingOrders,
     hours: row.restaurant_hours.map((h) => ({
       weekday: h.weekday,
       opensAt: h.opens_at,
@@ -71,6 +90,9 @@ function toSummary(row: RestaurantRow, now: Date, prices?: number[]): Restaurant
     now,
     timeZone: row.timezone,
   });
+}
+
+function toSummary(row: RestaurantRow, now: Date, prices?: number[]): RestaurantSummary {
   let priceCue: string | undefined;
   if (prices?.length) {
     const lo = Math.min(...prices);
@@ -87,7 +109,7 @@ function toSummary(row: RestaurantRow, now: Date, prices?: number[]): Restaurant
     brandColor: row.brand_color,
     brandOnColor: row.brand_on_color,
     timezone: row.timezone,
-    state,
+    state: businessState(row, now),
     priceCue,
   };
 }
@@ -132,6 +154,10 @@ export async function listMarketplaceRestaurants(
   return summaries.sort((a, b) => rank[a.state.status] - rank[b.state.status]);
 }
 
+// ---------------------------------------------------------------------------------------------
+// Storefront: one restaurant's public page, and the admin preview of the same page
+// ---------------------------------------------------------------------------------------------
+
 export interface MenuItemRow {
   id: string;
   name: string;
@@ -145,40 +171,53 @@ export interface MenuItemRow {
   category_id: string;
 }
 
-export interface MenuCategory {
+interface CategoryRow {
   id: string;
   name: string;
   description: string | null;
-  items: (MenuItemRow & { imageUrl: string | null })[];
+  sort_order: number;
+  active: boolean;
 }
 
-export async function getRestaurantProfile(supabase: ServerClient, slug: string, now = new Date()) {
-  const { data, error } = await supabase
-    .from("restaurants")
-    .select(
-      `${PUBLIC_FIELDS},
-       menu_categories (id, name, description, sort_order, active),
-       menu_items (id, name, description, image_path, price_minor, prep_minutes, tags, availability, sort_order, category_id, active)`,
-    )
-    .eq("slug", slug)
-    .in("status", ["published", "paused"])
-    .maybeSingle();
-  if (error) throw new Error(`Could not load restaurant: ${error.message}`);
-  if (!data) return null;
+interface ProfileRow extends RestaurantRow {
+  cover_path: string | null;
+  storefront_layout: StorefrontLayout | null;
+  public_phone: string | null;
+  service_area: string | null;
+  latitude: number | string | null;
+  longitude: number | string | null;
+  pickup_enabled: boolean;
+  dine_in_enabled: boolean;
+  menu_categories: CategoryRow[];
+  menu_items: (MenuItemRow & { active: boolean })[];
+}
 
-  type Row = RestaurantRow & {
-    menu_categories: {
-      id: string;
-      name: string;
-      description: string | null;
-      sort_order: number;
-      active: boolean;
-    }[];
-    menu_items: (MenuItemRow & { active: boolean })[];
-  };
-  const row = data as unknown as Row;
+// Everything the storefront shows. Still only public columns: no private record, payment
+// settings, pause reasons or closure reasons.
+const STOREFRONT_FIELDS = `${PUBLIC_FIELDS},
+  cover_path, storefront_layout, public_phone, service_area, latitude, longitude,
+  pickup_enabled, dine_in_enabled,
+  menu_categories (id, name, description, sort_order, active),
+  menu_items (id, name, description, image_path, price_minor, prep_minutes, tags, availability, sort_order, category_id, active)
+`;
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function coordinates(row: ProfileRow): StorefrontData["coordinates"] {
+  if (row.latitude === null || row.longitude === null) return null;
+  const latitude = Number(row.latitude);
+  const longitude = Number(row.longitude);
+  return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+}
+
+/**
+ * Archived categories and items are hidden; so are categories with nothing left in them. Members
+ * and platform staff can read archived rows through RLS, so this filter is what keeps the admin
+ * preview identical to the public page.
+ */
+function menu(row: ProfileRow): StorefrontCategory[] {
   const items = row.menu_items.filter((i) => i.active).sort((a, b) => a.sort_order - b.sort_order);
-  const categories: MenuCategory[] = row.menu_categories
+  return row.menu_categories
     .filter((c) => c.active)
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((c) => ({
@@ -187,15 +226,111 @@ export async function getRestaurantProfile(supabase: ServerClient, slug: string,
       description: c.description,
       items: items
         .filter((i) => i.category_id === c.id)
-        .map((i) => ({ ...i, imageUrl: publicAssetUrl(i.image_path) })),
+        .map((i): StorefrontMenuItem => ({
+          id: i.id,
+          name: i.name,
+          description: i.description,
+          priceMinor: i.price_minor,
+          prepMinutes: i.prep_minutes,
+          tags: i.tags,
+          imageUrl: publicAssetUrl(i.image_path),
+          available: i.availability === "available",
+        })),
     }))
     .filter((c) => c.items.length > 0);
+}
 
+function toStorefront(row: ProfileRow, state: BusinessState, now: Date): StorefrontData {
+  const closures = upcomingClosures(
+    row.restaurant_closures.map((c) => ({
+      startAt: new Date(c.start_at),
+      endAt: new Date(c.end_at),
+    })),
+    now,
+  );
   return {
-    ...toSummary(row, now),
+    id: row.id,
+    slug: row.slug,
+    name: row.display_name,
+    description: row.description,
+    cuisine: row.cuisine_tags,
+    logoUrl: publicAssetUrl(row.logo_path),
+    coverUrl: publicAssetUrl(row.cover_path),
+    layout: row.storefront_layout === "cover" ? "cover" : "standard",
+    brandColor: row.brand_color,
+    brandOnColor: row.brand_on_color,
+    state,
+    orderModes: { pickup: row.pickup_enabled, dineIn: row.dine_in_enabled },
     pickupInstructions: row.pickup_instructions,
-    directions: row.directions,
     address: row.address,
-    categories,
+    serviceArea: row.service_area,
+    directions: row.directions,
+    coordinates: coordinates(row),
+    publicPhone: row.public_phone,
+    hours: summarizeWeeklyHours(
+      row.restaurant_hours.map((h) => ({
+        weekday: h.weekday,
+        opensAt: h.opens_at,
+        closesAt: h.closes_at,
+      })),
+    ),
+    closures: closures.map((c) => formatClosure(c, { now, timeZone: row.timezone })),
+    categories: menu(row),
   };
+}
+
+/** A published or paused restaurant's storefront by web address; null for anything else. */
+export async function getRestaurantProfile(
+  supabase: ServerClient,
+  slug: string,
+  now = new Date(),
+): Promise<StorefrontData | null> {
+  const { data, error } = await supabase
+    .from("restaurants")
+    .select(STOREFRONT_FIELDS)
+    .eq("slug", slug)
+    .in("status", ["published", "paused"])
+    // Past closures don't affect the page; leave them out of the response.
+    .gt("restaurant_closures.end_at", now.toISOString())
+    .maybeSingle();
+  if (error) throw new Error(`Could not load restaurant: ${error.message}`);
+  if (!data) return null;
+  const row = data as unknown as ProfileRow;
+  return toStorefront(row, businessState(row, now), now);
+}
+
+export type StorefrontPreview = StorefrontData & { status: RestaurantStatus };
+
+/**
+ * The storefront of any restaurant the viewer can read, whatever its status, for the admin
+ * preview (brief §4.2 step 3, §7.3). It is never public: the route that shows it checks for
+ * platform staff, and RLS returns drafts only to platform staff and the restaurant's members.
+ *
+ * Open, closed and paused are shown as customers would see them once the restaurant is
+ * published: a first publish turns ordering on, so a never-published draft isn't shown as
+ * paused just because ordering is still off.
+ */
+export async function getRestaurantPreview(
+  supabase: ServerClient,
+  id: string,
+  now = new Date(),
+): Promise<StorefrontPreview | null> {
+  if (!UUID.test(id)) return null;
+  const { data, error } = await supabase
+    .from("restaurants")
+    .select(`${STOREFRONT_FIELDS}, first_published_at`)
+    .eq("id", id)
+    .gt("restaurant_closures.end_at", now.toISOString())
+    .maybeSingle();
+  if (error) throw new Error(`Could not load restaurant: ${error.message}`);
+  if (!data) return null;
+  const row = data as unknown as ProfileRow & { first_published_at: string | null };
+  const status = row.status as RestaurantStatus;
+  const state = businessState(
+    row,
+    now,
+    status === "paused" ? "paused" : "published",
+    row.first_published_at ? row.accepting_orders : true,
+  );
+  return { ...toStorefront(row, state, now), status };
 }
