@@ -2,6 +2,9 @@
 export const U = {
   ownerA: "00000000-0000-4000-a000-00000000000a",
   staffA: "00000000-0000-4000-a000-00000000005a",
+  managerA: "00000000-0000-4000-a000-00000000004a",
+  invitee: "00000000-0000-4000-a000-0000000000f1",
+  unconfirmed: "00000000-0000-4000-a000-0000000000f2",
   ownerB: "00000000-0000-4000-a000-00000000000b",
   revokedA: "00000000-0000-4000-a000-0000000000e0",
   customer1: "00000000-0000-4000-a000-0000000000c1",
@@ -35,15 +38,18 @@ export const ORDER = {
 export const PICKUP = { aPaid: "K7A4", bReady: "MX39" } as const;
 
 export const FIXTURES_SQL = /* sql */ `
-insert into auth.users (id, email) values
-  ('${U.ownerA}', 'owner-a@example.test'),
-  ('${U.staffA}', 'staff-a@example.test'),
-  ('${U.ownerB}', 'owner-b@example.test'),
-  ('${U.revokedA}', 'revoked-a@example.test'),
-  ('${U.customer1}', 'customer1@example.test'),
-  ('${U.customer2}', 'customer2@example.test'),
-  ('${U.admin}', 'admin@example.test'),
-  ('${U.support}', 'support@example.test');
+insert into auth.users (id, email, email_confirmed_at) values
+  ('${U.ownerA}', 'owner-a@example.test', now()),
+  ('${U.staffA}', 'staff-a@example.test', now()),
+  ('${U.managerA}', 'manager-a@example.test', now()),
+  ('${U.invitee}', 'invitee@example.test', now()),
+  ('${U.unconfirmed}', 'unconfirmed@example.test', null),
+  ('${U.ownerB}', 'owner-b@example.test', now()),
+  ('${U.revokedA}', 'revoked-a@example.test', now()),
+  ('${U.customer1}', 'customer1@example.test', now()),
+  ('${U.customer2}', 'customer2@example.test', now()),
+  ('${U.admin}', 'admin@example.test', now()),
+  ('${U.support}', 'support@example.test', now());
 
 insert into public.platform_staff (user_id, role) values
   ('${U.admin}', 'super_admin'),
@@ -57,11 +63,14 @@ insert into public.restaurants (id, slug, display_name, status, accepting_orders
 
 insert into public.restaurant_private (restaurant_id, legal_name, contact_phone) values
   ('${R.a}', 'Oliech Foods Ltd', '+254700000001'),
-  ('${R.b}', 'Campus Grill Ventures', '+254700000002');
+  ('${R.b}', 'Campus Grill Ventures', '+254700000002')
+on conflict (restaurant_id) do update
+  set legal_name = excluded.legal_name, contact_phone = excluded.contact_phone;
 
 insert into public.restaurant_memberships (restaurant_id, user_id, role, status) values
   ('${R.a}', '${U.ownerA}', 'owner', 'active'),
   ('${R.a}', '${U.staffA}', 'staff', 'active'),
+  ('${R.a}', '${U.managerA}', 'manager', 'active'),
   ('${R.a}', '${U.revokedA}', 'staff', 'revoked'),
   ('${R.b}', '${U.ownerB}', 'owner', 'active');
 

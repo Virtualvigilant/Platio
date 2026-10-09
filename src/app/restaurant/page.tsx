@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { NotOnTeam } from "@/components/site/not-on-team";
+import { WorkspaceNav } from "@/components/site/workspace-nav";
 import { Callout, OrderTicket } from "@/components/ui";
 import { formatClock } from "@/domain/prep-estimate";
+import { requireMembership } from "@/server/guards";
 import { listQueue, type QueueOrder } from "@/server/queries/orders";
-import { requireViewer } from "@/server/guards";
 
 export const metadata: Metadata = { title: "Order queue" };
 
@@ -14,52 +15,25 @@ const GROUPS = [
 ] as const;
 
 export default async function WorkspacePage(props: PageProps<"/restaurant">) {
-  const { supabase, viewer } = await requireViewer("/restaurant");
   const params = await props.searchParams;
-
-  if (viewer.memberships.length === 0) {
-    return (
-      <main className="mx-auto max-w-content px-4 py-12">
-        <h1 className="m-0 font-sans text-title">You’re not on a restaurant team</h1>
-        <p className="mt-2 font-serif text-body text-ink-muted">
-          Ask your restaurant’s owner to invite {viewer.email ?? "this account"}. Invitations are
-          sent by email.
-        </p>
-      </main>
-    );
-  }
-
-  // Only restaurants the viewer belongs to can be chosen; anything else falls back to the first.
   const requested = typeof params.r === "string" ? params.r : undefined;
-  const current =
-    viewer.memberships.find((m) => m.restaurantId === requested) ?? viewer.memberships[0];
+  const { supabase, viewer, membership } = await requireMembership("/restaurant", requested);
+  if (!membership) return <NotOnTeam email={viewer.email} />;
 
-  const orders = await listQueue(supabase, current.restaurantId);
+  const orders = await listQueue(supabase, membership.restaurantId);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
-      <div>
-        <p className="m-0 font-serif text-eyebrow text-brand-strong uppercase">
-          DineFlow / Restaurant workspace
-        </p>
-        <h1 className="mt-1 mb-0 font-sans text-title">{current.restaurantName}</h1>
-        {viewer.memberships.length > 1 ? (
-          <nav
-            aria-label="Your restaurants"
-            className="mt-2 flex flex-wrap gap-3 font-sans text-ui"
-          >
-            {viewer.memberships.map((m) => (
-              <Link
-                key={m.restaurantId}
-                href={`/restaurant?r=${m.restaurantId}`}
-                aria-current={m.restaurantId === current.restaurantId ? "page" : undefined}
-              >
-                {m.restaurantName}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
-      </div>
+      <WorkspaceNav
+        current="orders"
+        role={membership.role}
+        restaurantId={membership.restaurantId}
+        restaurantName={membership.restaurantName}
+        otherRestaurants={viewer.memberships
+          .filter((m) => m.restaurantId !== membership.restaurantId)
+          .map((m) => ({ id: m.restaurantId, name: m.restaurantName }))}
+      />
+      <h1 className="sr-only">Order queue</h1>
 
       {orders.length === 0 ? (
         <Callout tone="info" title="No open orders">

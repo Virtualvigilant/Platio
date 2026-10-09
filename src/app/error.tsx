@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui";
 
 export default function ErrorPage({
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   return (
     <main className="mx-auto flex max-w-content flex-col items-start gap-4 px-4 py-12">
@@ -15,7 +15,7 @@ export default function ErrorPage({
         Try again. If you were placing an order, check your orders before ordering again so you
         aren’t charged twice.
       </p>
-      <Button onClick={reset}>Try again</Button>
+      <Button onClick={() => retry()}>Try again</Button>
     </main>
   );
 }

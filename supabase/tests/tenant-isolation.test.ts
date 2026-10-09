@@ -214,7 +214,7 @@ describe("roles cannot be escalated from the app", () => {
     expect(res.rowCount).toBe(0);
   });
 
-  it("owners cannot rename their address or publish themselves; platform staff can", async () => {
+  it("owners cannot rename their address or change status; platform staff use the lifecycle", async () => {
     await asUser(U.ownerA, async (q) => {
       expect(
         await attempt(q, "update public.restaurants set slug = 'new-slug' where id = $1", [R.a]),
@@ -228,10 +228,14 @@ describe("roles cannot be escalated from the app", () => {
       ).toBeNull();
     });
     await asUser(U.admin, async (q) => {
+      // Status is never written directly, even by platform staff.
       expect(
         await attempt(q, "update public.restaurants set status = 'published' where id = $1", [
           R.draft,
         ]),
+      ).toBe(PERMISSION_DENIED);
+      expect(
+        await attempt(q, "select public.transition_restaurant($1, 'ready_for_review')", [R.draft]),
       ).toBeNull();
       const audit = await q("select action from public.audit_logs where restaurant_id = $1", [
         R.draft,

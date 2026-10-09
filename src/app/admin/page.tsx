@@ -1,27 +1,16 @@
 import type { Metadata } from "next";
-import { DataTable, Pill, type Tone, type Form } from "@/components/ui";
-import type { GlyphName } from "@/components/ui";
+import { DataTable, RestaurantStatusPill } from "@/components/ui";
+import type { RestaurantStatus } from "@/domain/restaurants/lifecycle";
 import { startOfBusinessDay } from "@/domain/time";
 import { requirePlatformStaff } from "@/server/guards";
 
 export const metadata: Metadata = { title: "Platform admin" };
 
-type Lifecycle = "draft" | "ready_for_review" | "published" | "paused" | "suspended" | "archived";
-
-const LIFECYCLE: Record<Lifecycle, { label: string; tone: Tone; form: Form; glyph: GlyphName }> = {
-  draft: { label: "Draft", tone: "neutral", form: "outline", glyph: "ring" },
-  ready_for_review: { label: "Ready for review", tone: "amber", form: "outline", glyph: "clock" },
-  published: { label: "Published", tone: "brand", form: "soft", glyph: "check" },
-  paused: { label: "Paused", tone: "amber", form: "soft", glyph: "pause" },
-  suspended: { label: "Suspended", tone: "danger", form: "soft", glyph: "cross" },
-  archived: { label: "Archived", tone: "neutral", form: "soft", glyph: "slash" },
-};
-
 interface Row {
   id: string;
   display_name: string;
   slug: string;
-  status: Lifecycle;
+  status: RestaurantStatus;
   accepting_orders: boolean;
   created_at: string;
 }
@@ -82,10 +71,7 @@ export default async function AdminPage() {
           {
             key: "status",
             label: "Status",
-            render: (r) => {
-              const { label, ...look } = LIFECYCLE[r.status];
-              return <Pill {...look}>{label}</Pill>;
-            },
+            render: (r) => <RestaurantStatusPill status={r.status} />,
           },
           {
             key: "accepting_orders",
