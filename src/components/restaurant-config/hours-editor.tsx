@@ -18,9 +18,8 @@ import {
   type DayHours,
   type Interval,
 } from "@/domain/restaurants/hours-form";
-import { saveHours } from "@/server/restaurant-config/actions";
 import type { FormState } from "@/server/actions";
-import { IDLE, errorFor } from "./form-state";
+import { IDLE, errorFor, type FormAction } from "./form-state";
 
 /**
  * The weekly opening hours editor (brief §6.4): Monday to Sunday, each day closed or open for up
@@ -30,8 +29,15 @@ import { IDLE, errorFor } from "./form-state";
  * The days are controlled state, so the form is submitted from onSubmit without React's automatic
  * reset; the server action still works as a plain form post before JavaScript loads.
  */
-export function HoursEditor({ restaurantId, saved }: { restaurantId: string; saved: Interval[] }) {
-  const [state, dispatch] = useActionState(saveHours.bind(null, restaurantId), IDLE);
+export function HoursEditor({
+  save,
+  saved,
+}: {
+  /** saveHours, bound to the restaurant. */
+  save: FormAction;
+  saved: Interval[];
+}) {
+  const [state, dispatch] = useActionState(save, IDLE);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

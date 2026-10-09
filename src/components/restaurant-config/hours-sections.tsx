@@ -1,4 +1,10 @@
 import type { Interval } from "@/domain/restaurants/hours-form";
+import {
+  addClosure,
+  removeClosure,
+  saveHours,
+  saveOperations,
+} from "@/server/restaurant-config/actions";
 import { ClosuresEditor, type ClosureView } from "./closures-editor";
 import { HoursEditor } from "./hours-editor";
 import { OperationsForm, type OperationsValues } from "./operations-form";
@@ -7,6 +13,10 @@ import { ConfigSection, type NextStep } from "./parts";
 /**
  * Opening hours, temporary closures and operations: wizard step 4 and the hours part of the
  * restaurant's own settings page. Each part saves on its own.
+ *
+ * A Server Component on purpose: it binds the Server Actions to the restaurant and passes them to
+ * the client forms (see FormAction). The actions still check who is asking; a bound id is never
+ * trusted.
  */
 export function HoursSections({
   restaurantId,
@@ -34,7 +44,7 @@ export function HoursSections({
             : "When customers can order, in Nairobi time. Periods can’t run past midnight."
         }
       >
-        <HoursEditor restaurantId={restaurantId} saved={hours} />
+        <HoursEditor save={saveHours.bind(null, restaurantId)} saved={hours} />
       </ConfigSection>
 
       <ConfigSection
@@ -42,7 +52,11 @@ export function HoursSections({
         title="Temporary closures"
         description="Close for a holiday or an event without changing the weekly hours."
       >
-        <ClosuresEditor restaurantId={restaurantId} closures={closures} />
+        <ClosuresEditor
+          add={addClosure.bind(null, restaurantId)}
+          remove={removeClosure.bind(null, restaurantId)}
+          closures={closures}
+        />
       </ConfigSection>
 
       <ConfigSection
@@ -51,7 +65,7 @@ export function HoursSections({
         description="How customers order and collect, and the preparation times staff start from."
       >
         <OperationsForm
-          restaurantId={restaurantId}
+          save={saveOperations.bind(null, restaurantId)}
           saved={operations}
           wizard={wizard}
           nextStep={nextStep}

@@ -10,6 +10,7 @@ import { listRestaurantAudit } from "@/server/audit/queries";
 import { requirePlatformStaff } from "@/server/guards";
 import { ChangeLog } from "./change-log";
 import { checklistRows, checklistSummary } from "./checklist";
+import { transitionRestaurant } from "./actions";
 import { LifecycleForms } from "./lifecycle-form";
 import { lifecycleMoves, statusNote } from "./moves";
 
@@ -176,7 +177,11 @@ export default async function PublishStepPage(props: PageProps<"/admin/restauran
             </p>
           ) : null}
         </div>
-        <LifecycleForms restaurantId={restaurant.id} status={restaurant.status} moves={moves} />
+        <LifecycleForms
+          transition={transitionRestaurant.bind(null, restaurant.id)}
+          status={restaurant.status}
+          moves={moves}
+        />
       </Section>
 
       <Section

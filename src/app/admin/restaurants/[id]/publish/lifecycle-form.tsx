@@ -3,8 +3,8 @@
 import { useActionState } from "react";
 import { CheckboxField, FormMessage, Glyph, SubmitButton, TextAreaField } from "@/components/ui";
 import type { RestaurantStatus } from "@/domain/restaurants/lifecycle";
-import { IDLE, type FormState } from "@/server/actions";
-import { transitionRestaurant } from "./actions";
+import { IDLE, type FormAction } from "@/components/restaurant-config/form-state";
+import type { FormState } from "@/server/actions";
 import { MAX_REASON, type LifecycleMove } from "./moves";
 
 /**
@@ -13,19 +13,16 @@ import { MAX_REASON, type LifecycleMove } from "./moves";
  * and the form that was used is replaced by the next status's moves.
  */
 export function LifecycleForms({
-  restaurantId,
+  transition,
   status,
   moves,
 }: {
-  restaurantId: string;
+  /** transitionRestaurant, bound to the restaurant in the page; each form posts its "to". */
+  transition: FormAction;
   status: RestaurantStatus;
   moves: readonly LifecycleMove[];
 }) {
-  const [state, formAction] = useActionState<FormState, FormData>(
-    (prev, formData) =>
-      transitionRestaurant(restaurantId, String(formData.get("to") ?? ""), prev, formData),
-    IDLE,
-  );
+  const [state, formAction] = useActionState<FormState, FormData>(transition, IDLE);
 
   const allowed = moves.filter((m) => m.allowed);
   const denied = moves.filter((m) => !m.allowed);

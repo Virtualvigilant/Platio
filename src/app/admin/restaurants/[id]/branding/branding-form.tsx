@@ -21,8 +21,8 @@ import {
   isHexColor,
 } from "@/domain/restaurants/branding";
 import { MAX_IMAGE_BYTES, type StorefrontLayout } from "@/domain/restaurants/config";
-import { IDLE, type FormState } from "@/server/actions";
-import { saveBranding } from "./actions";
+import { IDLE, type FormAction } from "@/components/restaurant-config/form-state";
+import type { FormState } from "@/server/actions";
 
 /** DineFlow teal (light theme), what the colour picker shows while the field is empty. */
 const DEFAULT_PICKER = "#167d8d";
@@ -78,7 +78,7 @@ function ratioLabel(ratio: number): string {
 const textName = (onColor: string) => (onColor === WHITE ? "white text" : "dark text");
 
 export function BrandingForm({
-  restaurantId,
+  save,
   name,
   cuisine,
   brandColor,
@@ -88,7 +88,8 @@ export function BrandingForm({
   logoKey,
   coverKey,
 }: {
-  restaurantId: string;
+  /** saveBranding, bound to the restaurant in the page. */
+  save: FormAction;
   name: string;
   cuisine: string[];
   brandColor: string | null;
@@ -99,7 +100,7 @@ export function BrandingForm({
   logoKey: string;
   coverKey: string;
 }) {
-  const [state, formAction, pending] = useActionState(saveBranding.bind(null, restaurantId), IDLE);
+  const [state, formAction, pending] = useActionState(save, IDLE);
   const [colour, setColour] = useState(brandColor ?? "");
   const [layout, setLayout] = useState<StorefrontLayout>(savedLayout);
   const [localError, setLocalError] = useState<string | null>(null);

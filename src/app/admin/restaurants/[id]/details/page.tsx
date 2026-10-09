@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { IdentityForm } from "@/components/restaurant-config/identity-form";
 import { StepHeader, nextStepAfter } from "@/components/restaurant-config/parts";
 import { requirePlatformStaff } from "@/server/guards";
+import { saveIdentity } from "@/server/restaurant-config/actions";
 import { loadRestaurant } from "@/server/restaurant-config/queries";
 
 export const metadata: Metadata = { title: "Restaurant identity" };
@@ -22,7 +23,7 @@ export default async function IdentityStepPage(
         Who the restaurant is. Customers see everything except the private details.
       </StepHeader>
       <IdentityForm
-        restaurantId={restaurant.id}
+        save={saveIdentity.bind(null, restaurant.id)}
         slugLocked={restaurant.firstPublishedAt !== null}
         nextStep={nextStepAfter("details")}
         saved={{

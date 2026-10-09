@@ -2,8 +2,7 @@
 
 import { useActionState } from "react";
 import { Fieldset, FormMessage, Glyph, Pill, SubmitButton, TextField } from "@/components/ui";
-import { addClosure, removeClosure } from "@/server/restaurant-config/actions";
-import { IDLE, errorFor, valueFor } from "./form-state";
+import { IDLE, errorFor, valueFor, type FormAction } from "./form-state";
 
 /** A closure ready to show: times already formatted in Nairobi time on the server. */
 export interface ClosureView {
@@ -20,10 +19,14 @@ export interface ClosureView {
  * order, like a public holiday. Upcoming ones are listed with a remove button.
  */
 export function ClosuresEditor({
-  restaurantId,
+  add,
+  remove,
   closures,
 }: {
-  restaurantId: string;
+  /** addClosure, bound to the restaurant. */
+  add: FormAction;
+  /** removeClosure, bound to the restaurant; the closure's id is posted with the form. */
+  remove: FormAction;
   closures: ClosureView[];
 }) {
   return (
@@ -52,20 +55,21 @@ export function ClosuresEditor({
                   </div>
                 ) : null}
               </div>
-              <RemoveClosure restaurantId={restaurantId} closure={c} />
+              <RemoveClosure remove={remove} closure={c} />
             </li>
           ))}
         </ul>
       )}
-      <AddClosure restaurantId={restaurantId} />
+      <AddClosure add={add} />
     </div>
   );
 }
 
-function RemoveClosure({ restaurantId, closure }: { restaurantId: string; closure: ClosureView }) {
-  const [state, action] = useActionState(removeClosure.bind(null, restaurantId, closure.id), IDLE);
+function RemoveClosure({ remove, closure }: { remove: FormAction; closure: ClosureView }) {
+  const [state, action] = useActionState(remove, IDLE);
   return (
     <form action={action} className="flex flex-col items-end gap-1">
+      <input type="hidden" name="closureId" value={closure.id} />
       <SubmitButton variant="secondary" pendingLabel="Removing…">
         Remove<span className="sr-only"> the closure starting {closure.starts}</span>
       </SubmitButton>
@@ -81,8 +85,8 @@ function RemoveClosure({ restaurantId, closure }: { restaurantId: string; closur
   );
 }
 
-function AddClosure({ restaurantId }: { restaurantId: string }) {
-  const [state, action] = useActionState(addClosure.bind(null, restaurantId), IDLE);
+function AddClosure({ add }: { add: FormAction }) {
+  const [state, action] = useActionState(add, IDLE);
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
       <Fieldset

@@ -3,8 +3,7 @@
 import { useActionState } from "react";
 import { CheckboxField, Fieldset, FormMessage, TextAreaField, TextField } from "@/components/ui";
 import { formatPresets } from "@/domain/restaurants/hours-form";
-import { saveOperations } from "@/server/restaurant-config/actions";
-import { IDLE, checkedFor, errorFor, valueFor } from "./form-state";
+import { IDLE, checkedFor, errorFor, valueFor, type FormAction } from "./form-state";
 import { SaveButtons, type NextStep } from "./parts";
 
 export interface OperationsValues {
@@ -17,17 +16,18 @@ export interface OperationsValues {
 
 /** How customers order and collect, and the kitchen's preparation-time defaults (§6.4). */
 export function OperationsForm({
-  restaurantId,
+  save,
   saved,
   nextStep,
   wizard = false,
 }: {
-  restaurantId: string;
+  /** saveOperations, bound to the restaurant. */
+  save: FormAction;
   saved: OperationsValues;
   nextStep?: NextStep;
   wizard?: boolean;
 }) {
-  const [state, action] = useActionState(saveOperations.bind(null, restaurantId), IDLE);
+  const [state, action] = useActionState(save, IDLE);
 
   return (
     <form action={action} noValidate className="flex max-w-content flex-col gap-5">

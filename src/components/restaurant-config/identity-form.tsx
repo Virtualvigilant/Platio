@@ -2,9 +2,8 @@
 
 import { useActionState } from "react";
 import { Fieldset, FormMessage, SubmitButton, TextAreaField, TextField } from "@/components/ui";
-import { saveIdentity, saveProfile } from "@/server/restaurant-config/actions";
 import type { FormState } from "@/server/actions";
-import { IDLE, errorFor, valueFor } from "./form-state";
+import { IDLE, errorFor, valueFor, type FormAction } from "./form-state";
 import { NEEDED_TO_PUBLISH, SaveButtons, type NextStep } from "./parts";
 
 export interface ProfileValues {
@@ -75,18 +74,19 @@ function ProfileFields({
 
 /** Wizard step 1 (platform staff): everything that identifies the restaurant. */
 export function IdentityForm({
-  restaurantId,
+  save,
   saved,
   slugLocked,
   nextStep,
 }: {
-  restaurantId: string;
+  /** saveIdentity, bound to the restaurant. */
+  save: FormAction;
   saved: IdentityValues;
   /** True once the restaurant has been published: the web address can't change any more. */
   slugLocked: boolean;
   nextStep?: NextStep;
 }) {
-  const [state, action] = useActionState(saveIdentity.bind(null, restaurantId), IDLE);
+  const [state, action] = useActionState(save, IDLE);
 
   return (
     <form action={action} noValidate className="flex max-w-content flex-col gap-5">
@@ -187,13 +187,14 @@ export function IdentityForm({
 
 /** The owner's own profile fields on /restaurant/settings. */
 export function ProfileForm({
-  restaurantId,
+  save,
   saved,
 }: {
-  restaurantId: string;
+  /** saveProfile, bound to the restaurant. */
+  save: FormAction;
   saved: ProfileValues;
 }) {
-  const [state, action] = useActionState(saveProfile.bind(null, restaurantId), IDLE);
+  const [state, action] = useActionState(save, IDLE);
   return (
     <form action={action} noValidate className="flex max-w-content flex-col gap-5">
       <ProfileFields idPrefix="profile" state={state} saved={saved} />

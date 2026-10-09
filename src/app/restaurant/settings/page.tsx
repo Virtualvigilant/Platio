@@ -10,6 +10,7 @@ import { NotForYourRole, NotOnTeam } from "@/components/site/not-on-team";
 import { WorkspaceNav } from "@/components/site/workspace-nav";
 import { getAdminRestaurant } from "@/server/admin/restaurants";
 import { requireMembership } from "@/server/guards";
+import { saveImage, saveLocation, saveProfile } from "@/server/restaurant-config/actions";
 import {
   getUpcomingClosures,
   getWeeklyHours,
@@ -114,7 +115,7 @@ export default async function SettingsPage(props: PageProps<"/restaurant/setting
               layout={restaurant.storefrontLayout}
             />
             <ProfileForm
-              restaurantId={restaurant.id}
+              save={saveProfile.bind(null, restaurant.id)}
               saved={{
                 description: restaurant.description,
                 cuisineTags: restaurant.cuisineTags,
@@ -129,7 +130,8 @@ export default async function SettingsPage(props: PageProps<"/restaurant/setting
             description="Shown on the restaurant page and in the marketplace."
           >
             <ProfileImagesForm
-              restaurantId={restaurant.id}
+              saveLogo={saveImage.bind(null, restaurant.id, "logo")}
+              saveCover={saveImage.bind(null, restaurant.id, "cover")}
               logoUrl={restaurant.logoUrl}
               coverUrl={restaurant.coverUrl}
             />
@@ -141,7 +143,7 @@ export default async function SettingsPage(props: PageProps<"/restaurant/setting
             description="How customers find the restaurant."
           >
             <LocationForm
-              restaurantId={restaurant.id}
+              save={saveLocation.bind(null, restaurant.id)}
               saved={{
                 address: restaurant.address,
                 serviceArea: restaurant.serviceArea,

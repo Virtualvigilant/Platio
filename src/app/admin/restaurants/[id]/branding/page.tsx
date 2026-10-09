@@ -4,6 +4,7 @@ import { ButtonLink, Callout } from "@/components/ui";
 import { WIZARD_STEPS } from "@/domain/restaurants/wizard";
 import { getAdminRestaurant } from "@/server/admin/restaurants";
 import { requirePlatformStaff } from "@/server/guards";
+import { saveBranding } from "./actions";
 import { BrandingForm } from "./branding-form";
 
 export const metadata: Metadata = { title: "Branding" };
@@ -49,7 +50,7 @@ export default async function BrandingPage(props: PageProps<"/admin/restaurants/
       ) : null}
 
       <BrandingForm
-        restaurantId={restaurant.id}
+        save={saveBranding.bind(null, restaurant.id)}
         name={restaurant.displayName}
         cuisine={restaurant.cuisineTags}
         brandColor={restaurant.brandColor}

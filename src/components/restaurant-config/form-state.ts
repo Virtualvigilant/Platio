@@ -12,6 +12,15 @@ import type { FormState } from "@/server/actions";
  */
 export const IDLE: FormState = { status: "idle" };
 
+/**
+ * A Server Action already bound to its restaurant in a Server Component and passed down as a prop.
+ * Binding there, not with .bind() in a client component, matters: when a form is posted without
+ * JavaScript, React re-renders the client component and compares the action's bound arguments; a
+ * .bind() in the client makes a new pending promise on every attempt, so the render never finishes
+ * and the request spins. Ids that vary per row go in hidden inputs instead.
+ */
+export type FormAction = (state: FormState, formData: FormData) => Promise<FormState>;
+
 export function errorFor(state: FormState, key: string): string | undefined {
   if (state.status !== "error" || !state.fieldErrors) return undefined;
   const errors = state.fieldErrors;

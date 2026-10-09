@@ -35,10 +35,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  */
 export async function transitionRestaurant(
   restaurantId: string,
-  to: string,
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  const to = text(formData, "to");
   if (!UUID.test(restaurantId) || !isRestaurantStatus(to)) {
     return failure("That change isn’t available. Reload the page and try again.");
   }

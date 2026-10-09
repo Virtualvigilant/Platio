@@ -2,8 +2,7 @@
 
 import { useActionState } from "react";
 import { FormMessage, ImageField, SubmitButton } from "@/components/ui";
-import { saveImage } from "@/server/restaurant-config/actions";
-import { IDLE, errorFor } from "./form-state";
+import { IDLE, errorFor, type FormAction } from "./form-state";
 
 const KINDS = {
   logo: {
@@ -23,32 +22,36 @@ const KINDS = {
  * stays under the server's size limit; the server checks the real file type and size.
  */
 export function ProfileImagesForm({
-  restaurantId,
+  saveLogo,
+  saveCover,
   logoUrl,
   coverUrl,
 }: {
-  restaurantId: string;
+  /** saveImage, bound to the restaurant and "logo". */
+  saveLogo: FormAction;
+  /** saveImage, bound to the restaurant and "cover". */
+  saveCover: FormAction;
   logoUrl: string | null;
   coverUrl: string | null;
 }) {
   return (
     <div className="grid gap-8 lg:grid-cols-2">
-      <ImageForm restaurantId={restaurantId} kind="logo" currentUrl={logoUrl} />
-      <ImageForm restaurantId={restaurantId} kind="cover" currentUrl={coverUrl} />
+      <ImageForm save={saveLogo} kind="logo" currentUrl={logoUrl} />
+      <ImageForm save={saveCover} kind="cover" currentUrl={coverUrl} />
     </div>
   );
 }
 
 function ImageForm({
-  restaurantId,
+  save,
   kind,
   currentUrl,
 }: {
-  restaurantId: string;
+  save: FormAction;
   kind: keyof typeof KINDS;
   currentUrl: string | null;
 }) {
-  const [state, action] = useActionState(saveImage.bind(null, restaurantId, kind), IDLE);
+  const [state, action] = useActionState(save, IDLE);
   const { label, hint, aspect } = KINDS[kind];
   return (
     <form action={action} className="flex min-w-0 flex-col gap-3">

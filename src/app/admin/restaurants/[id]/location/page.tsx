@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { LocationForm } from "@/components/restaurant-config/location-form";
 import { StepHeader, nextStepAfter } from "@/components/restaurant-config/parts";
 import { requirePlatformStaff } from "@/server/guards";
+import { saveLocation } from "@/server/restaurant-config/actions";
 import { loadRestaurant } from "@/server/restaurant-config/queries";
 
 export const metadata: Metadata = { title: "Restaurant location" };
@@ -20,7 +21,7 @@ export default async function LocationStepPage(
     <main className="flex min-w-0 flex-col gap-6">
       <StepHeader slug="location">How customers find the restaurant on campus.</StepHeader>
       <LocationForm
-        restaurantId={restaurant.id}
+        save={saveLocation.bind(null, restaurant.id)}
         wizard
         nextStep={nextStepAfter("location")}
         saved={{

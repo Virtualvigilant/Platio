@@ -314,8 +314,13 @@ export async function addClosure(
   return finish("Closure added. Customers can’t order during it.", null);
 }
 
-/** Bound with both ids in the browser; useActionState's state and form data aren't needed. */
-export async function removeClosure(restaurantId: string, closureId: string): Promise<FormState> {
+/** Bound to the restaurant on the server; the closure's id comes from the form. */
+export async function removeClosure(
+  restaurantId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const closureId = text(formData, "closureId");
   const auth = await authorizeRestaurant(restaurantId, ["owner", "manager"]);
   if (!auth.ok) return auth.state;
   if (!UUID.test(restaurantId) || !UUID.test(closureId)) {

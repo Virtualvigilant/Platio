@@ -2,8 +2,7 @@
 
 import { useActionState } from "react";
 import { Fieldset, FormMessage, TextAreaField, TextField } from "@/components/ui";
-import { saveLocation } from "@/server/restaurant-config/actions";
-import { IDLE, errorFor, valueFor } from "./form-state";
+import { IDLE, errorFor, valueFor, type FormAction } from "./form-state";
 import { SaveButtons, type NextStep } from "./parts";
 
 export interface LocationValues {
@@ -16,18 +15,19 @@ export interface LocationValues {
 
 /** Where customers find the restaurant (wizard step 3, and the owner's settings). */
 export function LocationForm({
-  restaurantId,
+  save,
   saved,
   nextStep,
   wizard = false,
 }: {
-  restaurantId: string;
+  /** saveLocation, bound to the restaurant. */
+  save: FormAction;
   saved: LocationValues;
   nextStep?: NextStep;
   /** In the setup wizard, say what the publish checklist needs. */
   wizard?: boolean;
 }) {
-  const [state, action] = useActionState(saveLocation.bind(null, restaurantId), IDLE);
+  const [state, action] = useActionState(save, IDLE);
   const coordinate = (v: number | null) => (v === null ? "" : String(v));
 
   return (
